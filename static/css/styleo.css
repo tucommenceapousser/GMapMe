@@ -1,0 +1,108 @@
+/* Base dark theme */
+:root {
+    --neon-cyan: #0ff;
+    --neon-magenta: #f0f;
+    --neon-yellow: #ff0;
+    --dark-bg: #1a1a1a;
+}
+
+body {
+    background-color: var(--dark-bg) !important;
+}
+
+/* Map styling */
+#map {
+    height: 80vh;
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid var(--neon-cyan);
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* Custom map theme */
+.leaflet-container {
+    background: #242424 !important;
+}
+
+.leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+    background-color: var(--dark-bg);
+    color: #fff;
+    border: 1px solid var(--neon-magenta);
+    box-shadow: 0 0 10px var(--neon-magenta);
+}
+
+.leaflet-popup-tip {
+    background-color: var(--dark-bg);
+    border: 1px solid var(--neon-magenta);
+}
+
+/* Card styling */
+.card {
+    background-color: #242424 !important;
+    border: 2px solid var(--neon-yellow) !important;
+    box-shadow: 0 0 15px var(--neon-yellow);
+}
+
+/* Button styling */
+.btn-primary {
+    background-color: transparent !important;
+    border: 2px solid var(--neon-cyan) !important;
+    color: var(--neon-cyan) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--neon-cyan) !important;
+    color: var(--dark-bg) !important;
+    box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Form controls */
+.form-control, .form-select {
+    background-color: #333 !important;
+    border: 1px solid var(--neon-magenta) !important;
+    color: #fff !important;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 10px var(--neon-magenta) !important;
+}
+
+/* Legend styling */
+.legend .card {
+    background-color: rgba(36, 36, 36, 0.9) !important;
+    border: 1px solid var(--neon-cyan) !important;
+}
+
+/* Marker glow effect */
+.leaflet-marker-icon {
+    filter: drop-shadow(0 0 5px var(--neon-cyan));
+}
+
+/* Alert styling */
+.alert {
+    border: 1px solid var(--neon-yellow);
+    box-shadow: 0 0 10px var(--neon-yellow);
+}
+
+/* Navigation */
+.navbar {
+    border-bottom: 2px solid var(--neon-cyan);
+    box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+/* Popup image */
+.popup-content img {
+    border: 2px solid var(--neon-magenta);
+    border-radius: 4px;
+}

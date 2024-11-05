@@ -135,6 +135,11 @@ def add_landmark():
 def manage():
     return render_template('manage.html')
 
+@app.route('/3d')
+@login_required  # ensure only logged in users can access
+def troid():
+    return render_template('3d.html')
+
 @app.route('/api/manage/bookmarks')
 @login_required
 def api_get_bookmarks():

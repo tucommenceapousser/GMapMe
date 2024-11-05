@@ -1,108 +1,173 @@
-/* Base dark theme */
+/* Import Glitch Font */
+@font-face {
+    font-family: 'Glitch';
+    src: url('/static/css/glitch.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Ultra-Fun and Addictive Neon Dark Theme with Glow Effects */
 :root {
-    --neon-cyan: #0ff;
-    --neon-magenta: #f0f;
-    --neon-yellow: #ff0;
-    --dark-bg: #1a1a1a;
+    --neon-cyan: #00ffff;
+    --neon-magenta: #ff00ff;
+    --neon-yellow: #ffff00;
+    --primary-color: #ed2762;
+    --background-color: #1a1a1a;
+    --text-color: #f4f1f6;
+    --card-bg-color: #2b2b2b;
+    --border-color: #999;
+    --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --glitch-font: 'Glitch';
 }
 
 body {
-    background-color: var(--dark-bg) !important;
+    background-color: var(--background-color);
+    font-family: var(--font-family);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    overflow-x: hidden;
 }
 
-/* Map styling */
+h1, h2, h3, h4, h5, h6, .username { /* Apply Glitch font to these elements */
+    font-family: var(--glitch-font), sans-serif;
+}
+
+/* Specific styling for Google account username */
+.account-username {
+    font-family: var(--glitch-font), sans-serif;
+    color: #ff0000; /* Set text color to red */
+}
+
 #map {
     height: 80vh;
     width: 100%;
     border-radius: 8px;
-    border: 2px solid var(--neon-cyan);
-    box-shadow: 0 0 10px var(--neon-cyan);
+    /* Reduced glow effects to enhance map clarity */
+    box-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+    border: none;
+    /* Remove any additional overlay effects */
 }
 
-/* Custom map theme */
-.leaflet-container {
-    background: #242424 !important;
-}
-
-.leaflet-tile-pane {
-    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-}
-
-/* Popup styling */
-.leaflet-popup-content-wrapper {
-    background-color: var(--dark-bg);
-    color: #fff;
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background-color: var(--background-color);
+    color: var(--text-color);
     border: 1px solid var(--neon-magenta);
     box-shadow: 0 0 10px var(--neon-magenta);
 }
 
-.leaflet-popup-tip {
-    background-color: var(--dark-bg);
-    border: 1px solid var(--neon-magenta);
-}
-
-/* Card styling */
 .card {
-    background-color: #242424 !important;
-    border: 2px solid var(--neon-yellow) !important;
-    box-shadow: 0 0 15px var(--neon-yellow);
+    background-color: var(--card-bg-color);
+    border-radius: 8px;
+    box-shadow: 0 0 10px var(--neon-yellow), 0 0 15px var(--neon-yellow);
+    margin: 20px;
+    padding: 20px;
+    color: var(--text-color);
 }
 
-/* Button styling */
 .btn-primary {
-    background-color: transparent !important;
-    border: 2px solid var(--neon-cyan) !important;
-    color: var(--neon-cyan) !important;
-    transition: all 0.3s ease !important;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: 2px solid var(--primary-color);
+    border-radius: 25px;
+    padding: 10px 20px;
+    transition: 0.3s;
+    box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color), 0 0 30px var(--primary-color);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background-color: var(--neon-cyan) !important;
-    color: var(--dark-bg) !important;
-    box-shadow: 0 0 15px var(--neon-cyan);
+.btn-primary:hover {
+    background-color: darken(var(--primary-color), 10%);
+    box-shadow: 0 0 15px var(--primary-color), 0 0 30px var(--primary-color), 0 0 45px var(--primary-color);
 }
 
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: all 650ms;
 }
 
-/* Form controls */
-.form-control, .form-select {
-    background-color: #333 !important;
-    border: 1px solid var(--neon-magenta) !important;
-    color: #fff !important;
+.btn-primary:hover::after {
+    left: 100%;
 }
 
-.form-control:focus, .form-select:focus {
-    box-shadow: 0 0 10px var(--neon-magenta) !important;
+.form-control,
+.form-select {
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
-/* Legend styling */
-.legend .card {
-    background-color: rgba(36, 36, 36, 0.9) !important;
-    border: 1px solid var(--neon-cyan) !important;
+.alert {
+    border-radius: 5px;
+    border: 1px solid var(--neon-magenta);
+    background-color: var(--neon-cyan);
+    color: var(--neon-magenta);
+    box-shadow: 0 0 10px var(--neon-magenta);
+    margin: 10px;
 }
 
-/* Marker glow effect */
+.navbar {
+    background-color: var(--primary-color);
+    border: none;
+    box-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+    color: var(--text-color);
+    text-shadow: 0 0 5px var(--neon-yellow), 0 0 10px var(--neon-yellow);
+}
+
+.popup-content img {
+    border-radius: 8px;
+    max-width: 100%;
+    box-shadow: 0 0 10px var(--neon-cyan), 0 0 15px var(--neon-cyan);
+}
+
+.form-control:focus,
+.form-select:focus {
+    outline: none;
+    border: 1px solid var(--neon-magenta);
+    box-shadow: 0 0 8px var(--neon-magenta);
+}
+.leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    /* Adjusted filter parameters */
+}
+
 .leaflet-marker-icon {
     filter: drop-shadow(0 0 5px var(--neon-cyan));
 }
-
-/* Alert styling */
-.alert {
-    border: 1px solid var(--neon-yellow);
-    box-shadow: 0 0 10px var(--neon-yellow);
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+    background-color: rgba(43, 43, 43, 0.9); /* Dark background with transparency for better readability */
+    color: #ffffff; /* White text for clear contrast */
+    border: 1px solid #ff00ff; /* Solid border to differentiate popup */
+    box-shadow: 0 0 4px #ff00ff; /* Subtle shadow for a stylish but understated look */
+    border-radius: 5px; /* Rounded corners for a polished look */
+    padding: 10px; /* Sufficient padding for content spacing */
 }
 
-/* Navigation */
-.navbar {
-    border-bottom: 2px solid var(--neon-cyan);
-    box-shadow: 0 0 15px var(--neon-cyan);
+.leaflet-popup-tip {
+    background-color: rgba(43, 43, 43, 0.9); /* Matching tip color with wrapper for consistency */
+    border: 1px solid #ff00ff;
 }
 
-/* Popup image */
-.popup-content img {
-    border: 2px solid var(--neon-magenta);
-    border-radius: 4px;
+#cesiumContainer {
+    width: 100%;
+    height: 80vh;
+    display: block;
+    overflow: hidden;
 }
