@@ -15,7 +15,8 @@ class Landmark(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text)
-    category = db.Column(db.String(50), default='historical')  # New field for categories
+    category = db.Column(db.String(50), default='historical')
+    photo = db.Column(db.String(200))  # Store the photo filename
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    source = db.Column(db.String(50), default='user')  # 'wikipedia' or 'user'
+    source = db.Column(db.String(50), default='user')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)

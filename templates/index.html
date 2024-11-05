@@ -9,7 +9,7 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Add New Landmark</h5>
-                <form id="landmarkForm">
+                <form id="landmarkForm" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="name" required>
@@ -27,6 +27,10 @@
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Photo</label>
+                        <input type="file" class="form-control" id="photo" accept="image/*">
                     </div>
                     <p class="text-muted">Click on the map to set location</p>
                     <button type="submit" class="btn btn-primary" disabled id="submitBtn">Add Landmark</button>

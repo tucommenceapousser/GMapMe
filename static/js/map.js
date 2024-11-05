@@ -59,7 +59,7 @@ function initMap() {
             loadLandmarks(lat, lng);
         }, function(error) {
             console.log("Could not get location:", error.message);
-            // Default to a central location (e.g., Paris) if location access denied
+            // Default to a central location if location access denied
             map.setView([48.8566, 2.3522], 13);
             loadLandmarks(48.8566, 2.3522);
         }, {
@@ -115,6 +115,13 @@ function createMarker(landmark) {
         <div class="popup-content">
             <h5>${landmark.name}</h5>
             <p>${landmark.description}</p>
+    `;
+
+    if (landmark.photo) {
+        popupContent += `<img src="/static/uploads/${landmark.photo}" class="img-fluid mb-2" alt="${landmark.name}">`;
+    }
+
+    popupContent += `
             <small class="text-muted">
                 Source: ${landmark.source}
                 ${landmark.category ? `<br>Category: ${landmark.category}` : ''}
@@ -188,21 +195,22 @@ if (form) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
 
-        const data = {
-            name: document.getElementById('name').value,
-            description: document.getElementById('description').value,
-            category: document.getElementById('category').value,
-            latitude: selectedLocation.lat,
-            longitude: selectedLocation.lng
-        };
+        const formData = new FormData();
+        formData.append('name', document.getElementById('name').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('category', document.getElementById('category').value);
+        formData.append('latitude', selectedLocation.lat);
+        formData.append('longitude', selectedLocation.lng);
+
+        const photoInput = document.getElementById('photo');
+        if (photoInput.files.length > 0) {
+            formData.append('photo', photoInput.files[0]);
+        }
 
         try {
             const response = await fetch('/api/landmarks', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                body: formData
             });
 
             if (!response.ok) {
