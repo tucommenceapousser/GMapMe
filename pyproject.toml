@@ -14,4 +14,5 @@ dependencies = [
     "pyopenssl",
     "sqlalchemy>=2.0.36",
     "flask-uploads>=0.2.1",
+    "werkzeug",
 ]

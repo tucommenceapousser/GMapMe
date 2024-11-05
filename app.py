@@ -37,3 +37,8 @@ app.register_blueprint(google_auth)
 with app.app_context():
     import models
     db.create_all()
+
+# Configure upload settings
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
