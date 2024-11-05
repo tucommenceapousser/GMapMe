@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import datetime
 from flask import render_template, jsonify, request, current_app
 from flask_login import current_user, login_required
@@ -7,6 +8,24 @@ from app import app, db
 from models import Landmark
 import requests
 from utils import get_wikipedia_landmarks
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+log_file_handler = logging.FileHandler('log.txt')
+bookmark_file_handler = logging.FileHandler('bookmark.txt')
+
+log_file_handler.setLevel(logging.INFO)
+bookmark_file_handler.setLevel(logging.INFO)
+
+log_formatter = logging.Formatter('%(asctime)s - %(message)s')
+log_file_handler.setFormatter(log_formatter)
+bookmark_file_handler.setFormatter(log_formatter)
+
+logger = logging.getLogger(__name__)
+logger.addHandler(log_file_handler)
+
+bookmark_logger = logging.getLogger('bookmark_logger')
+bookmark_logger.addHandler(bookmark_file_handler)
 
 # Configure upload settings
 UPLOAD_FOLDER = 'static/uploads'
@@ -23,13 +42,13 @@ def index():
 def get_landmarks():
     lat = float(request.args.get('lat', 0))
     lng = float(request.args.get('lng', 0))
-    
+
     # Get Wikipedia landmarks
     wiki_landmarks = get_wikipedia_landmarks(lat, lng)
-    
+
     # Get user-added landmarks from database
     user_landmarks = Landmark.query.filter_by(source='user').all()
-    
+
     landmarks = []
     # Format Wikipedia landmarks
     for l in wiki_landmarks:
@@ -40,7 +59,7 @@ def get_landmarks():
             'description': l['description'],
             'source': 'wikipedia'
         })
-    
+
     # Format user landmarks
     for l in user_landmarks:
         landmarks.append({
@@ -53,8 +72,24 @@ def get_landmarks():
             'source': 'user',
             'added_by': l.author.username if l.author else 'Anonymous'
         })
-    
+
     return jsonify(landmarks)
+
+# Additional logging for user login can be added
+def get_client_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+    return ip
+
+# Use this function to get the IP when logging
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        client_ip = get_client_ip()
+        logger.info(f'User logged in: UserID={current_user.id}, IP={client_ip}')
 
 @app.route('/api/landmarks', methods=['POST'])
 @login_required
@@ -65,8 +100,7 @@ def add_landmark():
         longitude = float(request.form.get('longitude'))
         description = request.form.get('description')
         category = request.form.get('category')
-        
-        # Create landmark instance
+
         landmark = Landmark(
             name=name,
             latitude=latitude,
@@ -77,7 +111,6 @@ def add_landmark():
             user_id=current_user.id
         )
 
-        # Handle photo upload
         if 'photo' in request.files:
             photo = request.files['photo']
             if photo and allowed_file(photo.filename):
@@ -87,54 +120,18 @@ def add_landmark():
 
         db.session.add(landmark)
         db.session.commit()
+
+        # Log the bookmark creation
+        client_ip = get_client_ip()
+        bookmark_logger.info(f'Bookmark created: Name={name}, Latitude={latitude}, Longitude={longitude}, IP={client_ip}')
+
         return jsonify({'status': 'success'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-@app.route('/api/bookmarks')
-@login_required
-def get_bookmarks():
-    # Fetch bookmarks from the database
-    user_landmarks = Landmark.query.all()
-
-    # Debug statement to check what landmarks are retrieved
-    print(user_landmarks)
-
-    # Group bookmarks
-    bookmarks_by_category = {}
-    bookmarks_by_user = {}
-    bookmarks_by_location = {}
-
-    for landmark in user_landmarks:
-        category = landmark.category
-        user = landmark.author.username if landmark.author else 'Anonymous'
-        location = (landmark.latitude, landmark.longitude)
-
-        # Group by category
-        if category not in bookmarks_by_category:
-            bookmarks_by_category[category] = []
-        bookmarks_by_category[category].append({
-            'name': landmark.name,
-            'latitude': landmark.latitude,
-            'longitude': landmark.longitude,
-            'added_by': user
-        })
-
-    # Debug statement to inspect the collected bookmarks
-    print({
-        'by_category': bookmarks_by_category,
-        'by_user': bookmarks_by_user,
-        'by_location': bookmarks_by_location
-    })
-
-    return jsonify({
-        'by_category': bookmarks_by_category,
-        'by_user': bookmarks_by_user,
-        'by_location': bookmarks_by_location
-    })
-
 if __name__ == "__main__":
     # Ensure upload directory exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     app.run(host="0.0.0.0", port=5000)
+

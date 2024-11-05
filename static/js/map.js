@@ -241,6 +241,56 @@ function showAlert(type, message) {
         alertDiv.remove();
     }, 5000);
 }
+async function loadBookmarks() {
+  try {
+    const response = await fetch('/api/landmarks');
+    if (!response.ok) {
+      throw new Error('Failed to fetch landmarks');
+    }
+
+    const landmarks = await response.json();
+    displayBookmarks(landmarks);
+  } catch (error) {
+    console.error('Error loading bookmarks:', error);
+  }
+}
+
+async function displayBookmarks(landmarks) {
+    const bookmarkList = document.getElementById('bookmarkList');
+    bookmarkList.innerHTML = ''; // Clear existing content
+
+    const promises = landmarks.map(async landmark => {
+        if (landmark.source === 'user') {
+            const address = await getAddress(landmark.latitude, landmark.longitude); // Await the address to resolve
+            bookmarkList.innerHTML += `
+                <div class="bookmark-item mb-3" data-lat="${landmark.latitude}" data-lng="${landmark.longitude}">
+                    <strong>${landmark.name}</strong><br>
+                    <small>by ${landmark.added_by || 'Anonymous'}</small><br>
+                    <small>Coordinates: ${landmark.latitude.toFixed(4)}, ${landmark.longitude.toFixed(4)}</small><br>
+                    <small>Address: ${address}</small>
+                </div>
+            `;
+        }
+    });
+
+    // Wait for all promises to complete
+    await Promise.all(promises);
+
+    // Add click event to navigate to map marker
+    document.querySelectorAll('.bookmark-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const lat = parseFloat(this.getAttribute('data-lat'));
+            const lng = parseFloat(this.getAttribute('data-lng'));
+            map.setView([lat, lng], 15);
+            markers.forEach(marker => {
+                if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
+                    marker.openPopup();
+                }
+            });
+            scrollToMap();
+        });
+    });
+}
 
 const form = document.getElementById('landmarkForm');
 if (form) {
@@ -293,19 +343,7 @@ if (form) {
     });
 }
 
-async function loadBookmarks() {
-    try {
-        const response = await fetch('/api/bookmarks');
-        if (!response.ok) {
-            throw new Error('Failed to fetch bookmarks');
-        }
 
-        const bookmarksData = await response.json();
-        displayBookmarks(bookmarksData);
-    } catch (error) {
-        console.error('Error loading bookmarks:', error);
-    }
-}
 
 function scrollToMap() {
     const mapElement = document.getElementById('map');
