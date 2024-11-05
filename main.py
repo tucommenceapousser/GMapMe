@@ -130,6 +130,56 @@ def add_landmark():
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
+@app.route('/manage')
+@login_required  # ensure only logged in users can access
+def manage():
+    return render_template('manage.html')
+
+@app.route('/api/manage/bookmarks')
+@login_required
+def api_get_bookmarks():
+    # Fetch all bookmarks from the database
+    user_landmarks = Landmark.query.all()  # or filter by certain criteria
+    return jsonify([{
+        'id': l.id,
+        'name': l.name,
+    } for l in user_landmarks])
+
+@app.route('/api/manage/bookmarks/<int:bookmark_id>', methods=['DELETE'])
+@login_required
+def api_delete_bookmark(bookmark_id):
+    try:
+        landmark = Landmark.query.get(bookmark_id)
+        if not landmark:
+            return jsonify({'status': 'error', 'message': 'Bookmark not found'}), 404
+
+        db.session.delete(landmark)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
+@app.route('/api/manage/logs')
+@login_required
+def api_get_logs():
+    try:
+        with open('log.txt', 'r') as file:
+            log_data = file.read()
+        return log_data, 200
+    except FileNotFoundError:
+        return "Log file not found", 404
+
+@app.route('/api/manage/bookmarklogs')
+@login_required
+def api_get_bookmark_logs():
+    try:
+        with open('bookmark.txt', 'r') as file:
+            log_data = file.read()
+        return log_data, 200
+    except FileNotFoundError:
+        return "Bookmark log file not found", 404
+
 if __name__ == "__main__":
     # Ensure upload directory exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)

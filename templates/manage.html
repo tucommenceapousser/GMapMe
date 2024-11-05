@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Manage Bookmarks</h2>
+    <div id="bookmarkManagement">
+        <!-- Dynamically load bookmarks here -->
+    </div>
+
+    <h2>Logs</h2>
+    <div id="logs">
+        <h3>Log File</h3>
+        <pre id="logContent"></pre>
+
+        <h3>Bookmark File</h3>
+        <pre id="bookmarkLogContent"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// JavaScript to fetch and display bookmarks and logs
+document.addEventListener('DOMContentLoaded', function() {
+    loadBookmarks();
+    loadLogs();
+});
+
+async function loadBookmarks() {
+    try {
+        const response = await fetch('/api/manage/bookmarks');
+        const bookmarks = await response.json();
+        const bookmarkManagement = document.getElementById('bookmarkManagement');
+        bookmarkManagement.innerHTML = bookmarks.map(bookmark => `
+            <div class="bookmark-item">
+                <strong>${bookmark.name}</strong>
+                <button onclick="deleteBookmark(${bookmark.id})">Delete</button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading bookmarks:', error);
+    }
+}
+
+async function deleteBookmark(id) {
+    try {
+        const response = await fetch(`/api/manage/bookmarks/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            console.log('Bookmark deleted');
+            loadBookmarks(); // Refresh list
+        }
+    } catch (error) {
+        console.error('Error deleting bookmark:', error);
+    }
+}
+
+async function loadLogs() {
+    try {
+        const logResponse = await fetch('/api/manage/logs');
+        const logData = await logResponse.text();
+        document.getElementById('logContent').textContent = logData;
+
+        const bookmarkLogResponse = await fetch('/api/manage/bookmarklogs');
+        const bookmarkLogData = await bookmarkLogResponse.text();
+        document.getElementById('bookmarkLogContent').textContent = bookmarkLogData;
+    } catch (error) {
+        console.error('Error loading logs:', error);
+    }
+}
+</script>
+{% endblock %}
