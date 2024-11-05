@@ -2,6 +2,16 @@ let map;
 let selectedLocation = null;
 let markers = [];
 
+// Define fallback marker options
+const fallbackMarkerOptions = {
+    radius: 8,
+    fillColor: "#3388ff",
+    color: "#fff",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+};
+
 // Initialize map
 function initMap() {
     map = L.map('map').setView([0, 0], 13);
@@ -18,11 +28,11 @@ function initMap() {
                 <div class="card-body p-2">
                     <h6 class="card-title mb-2">Legend</h6>
                     <div class="d-flex align-items-center mb-1">
-                        <img src="/static/icons/blue-marker.png" alt="User" style="width: 20px; height: 20px;">
+                        <div style="width: 20px; height: 20px; background-color: #4A90E2; border-radius: 50%;"></div>
                         <span class="ms-2">User Added</span>
                     </div>
                     <div class="d-flex align-items-center">
-                        <img src="/static/icons/red-marker.png" alt="Wikipedia" style="width: 20px; height: 20px;">
+                        <div style="width: 20px; height: 20px; background-color: #E74C3C; border-radius: 50%;"></div>
                         <span class="ms-2">Wikipedia</span>
                     </div>
                 </div>
@@ -39,11 +49,19 @@ function initMap() {
             const lng = position.coords.longitude;
             map.setView([lat, lng], 13);
             loadLandmarks(lat, lng);
-        }, function() {
-            console.error("Could not get location");
-            map.setView([40.7128, -74.0060], 13); // Default to New York if location access denied
-            loadLandmarks(40.7128, -74.0060);
+        }, function(error) {
+            console.error("Could not get location:", error.message);
+            // Default to a central location (e.g., Paris) if location access denied
+            map.setView([48.8566, 2.3522], 13);
+            loadLandmarks(48.8566, 2.3522);
+        }, {
+            timeout: 5000,
+            enableHighAccuracy: true
         });
+    } else {
+        console.error("Geolocation not supported");
+        map.setView([48.8566, 2.3522], 13);
+        loadLandmarks(48.8566, 2.3522);
     }
 
     // Handle map clicks for adding new landmarks
@@ -58,25 +76,47 @@ function initMap() {
 
 // Create marker with popup
 function createMarker(landmark) {
-    // Define custom icons for different sources
-    const icons = {
-        wikipedia: L.icon({
-            iconUrl: '/static/icons/red-marker.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34]
-        }),
-        user: L.icon({
-            iconUrl: '/static/icons/blue-marker.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34]
-        })
-    };
+    let marker;
+    const isWikipedia = landmark.source === 'wikipedia';
+    
+    try {
+        // Define custom icons for different sources
+        const icons = {
+            wikipedia: {
+                options: {
+                    radius: 8,
+                    fillColor: "#E74C3C",  // Red for Wikipedia
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }
+            },
+            user: {
+                options: {
+                    radius: 8,
+                    fillColor: "#4A90E2",  // Blue for user-added
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }
+            }
+        };
 
-    const marker = L.marker([landmark.latitude, landmark.longitude], {
-        icon: icons[landmark.source]
-    });
+        // Create circular marker with appropriate style
+        marker = L.circleMarker(
+            [landmark.latitude, landmark.longitude],
+            icons[landmark.source].options
+        );
+    } catch (error) {
+        console.error('Error creating marker:', error);
+        // Use fallback marker if custom styling fails
+        marker = L.circleMarker(
+            [landmark.latitude, landmark.longitude],
+            fallbackMarkerOptions
+        );
+    }
 
     let popupContent = `
         <div class="popup-content">

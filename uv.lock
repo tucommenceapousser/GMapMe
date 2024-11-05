@@ -437,6 +437,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pyopenssl" },
     { name = "requests" },
+    { name = "sqlalchemy" },
 ]
 
 [package.metadata]
@@ -449,6 +450,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pyopenssl" },
     { name = "requests", specifier = ">=2.32.3" },
+    { name = "sqlalchemy", specifier = ">=2.0.36" },
 ]
 
 [[package]]
