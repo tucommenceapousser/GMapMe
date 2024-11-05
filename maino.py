@@ -92,48 +92,6 @@ def add_landmark():
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-@app.route('/api/bookmarks')
-@login_required
-def get_bookmarks():
-    # Fetch bookmarks from the database
-    user_landmarks = Landmark.query.all()
-
-    # Debug statement to check what landmarks are retrieved
-    print(user_landmarks)
-
-    # Group bookmarks
-    bookmarks_by_category = {}
-    bookmarks_by_user = {}
-    bookmarks_by_location = {}
-
-    for landmark in user_landmarks:
-        category = landmark.category
-        user = landmark.author.username if landmark.author else 'Anonymous'
-        location = (landmark.latitude, landmark.longitude)
-
-        # Group by category
-        if category not in bookmarks_by_category:
-            bookmarks_by_category[category] = []
-        bookmarks_by_category[category].append({
-            'name': landmark.name,
-            'latitude': landmark.latitude,
-            'longitude': landmark.longitude,
-            'added_by': user
-        })
-
-    # Debug statement to inspect the collected bookmarks
-    print({
-        'by_category': bookmarks_by_category,
-        'by_user': bookmarks_by_user,
-        'by_location': bookmarks_by_location
-    })
-
-    return jsonify({
-        'by_category': bookmarks_by_category,
-        'by_user': bookmarks_by_user,
-        'by_location': bookmarks_by_location
-    })
-
 if __name__ == "__main__":
     # Ensure upload directory exists
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
