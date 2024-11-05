@@ -2,31 +2,32 @@ let map;
 let selectedLocation = null;
 let markers = [];
 
-// Define category colors
+// Define category colors with neon values
 const categoryColors = {
-    historical: '#4A90E2',    // Blue
-    cultural: '#E67E22',      // Orange
-    natural: '#2ECC71',       // Green
-    religious: '#9B59B6',     // Purple
-    entertainment: '#F1C40F', // Yellow
-    wikipedia: '#E74C3C'      // Red (for Wikipedia points)
+    historical: '#00ffff',    // Neon Cyan
+    cultural: '#ff00ff',      // Neon Magenta
+    natural: '#00ff00',       // Neon Green
+    religious: '#ff00ff',     // Neon Purple
+    entertainment: '#ffff00', // Neon Yellow
+    wikipedia: '#ff0000'      // Neon Red
 };
 
-// Define fallback marker options
+// Define fallback marker options with neon effect
 const fallbackMarkerOptions = {
     radius: 8,
-    fillColor: "#3388ff",
+    fillColor: "#00ffff",
     color: "#fff",
-    weight: 1,
+    weight: 2,
     opacity: 1,
     fillOpacity: 0.8
 };
 
-// Initialize map
+// Initialize map with dark theme
 function initMap() {
     map = L.map('map').setView([0, 0], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors',
+        className: 'dark-tiles'
     }).addTo(map);
 
     // Add legend
@@ -34,12 +35,12 @@ function initMap() {
     legend.onAdd = function(map) {
         const div = L.DomUtil.create('div', 'info legend');
         div.innerHTML = `
-            <div class="card bg-dark">
+            <div class="card">
                 <div class="card-body p-2">
                     <h6 class="card-title mb-2">Categories</h6>
                     ${Object.entries(categoryColors).map(([category, color]) => `
                         <div class="d-flex align-items-center mb-1">
-                            <div style="width: 20px; height: 20px; background-color: ${color}; border-radius: 50%;"></div>
+                            <div style="width: 20px; height: 20px; background-color: ${color}; border-radius: 50%; box-shadow: 0 0 10px ${color};"></div>
                             <span class="ms-2">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
                         </div>
                     `).join('')}
@@ -94,7 +95,7 @@ function createMarker(landmark) {
             radius: 8,
             fillColor: markerColor,
             color: "#fff",
-            weight: 1,
+            weight: 2,
             opacity: 1,
             fillOpacity: 0.8
         };
@@ -135,17 +136,30 @@ function createMarker(landmark) {
     popupContent += '</div>';
     marker.bindPopup(popupContent);
 
+    // Add hover effect
+    marker.on('mouseover', function() {
+        this.setStyle({
+            fillOpacity: 1,
+            weight: 3
+        });
+    });
+    marker.on('mouseout', function() {
+        this.setStyle({
+            fillOpacity: 0.8,
+            weight: 2
+        });
+    });
+
     markers.push(marker);
     return marker;
 }
 
-// Clear all markers
+// Rest of the code remains the same
 function clearMarkers() {
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
 }
 
-// Load landmarks from API
 async function loadLandmarks(lat, lng) {
     try {
         const response = await fetch(`/api/landmarks?lat=${lat}&lng=${lng}`);
@@ -166,7 +180,6 @@ async function loadLandmarks(lat, lng) {
     }
 }
 
-// Show alert message
 function showAlert(type, message) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
@@ -177,13 +190,11 @@ function showAlert(type, message) {
     `;
     document.querySelector('.col-md-3').insertBefore(alertDiv, document.querySelector('.card'));
     
-    // Auto dismiss after 5 seconds
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
 }
 
-// Handle form submission
 const form = document.getElementById('landmarkForm');
 if (form) {
     form.addEventListener('submit', async function(e) {
@@ -221,13 +232,8 @@ if (form) {
                 throw new Error('Failed to add landmark');
             }
 
-            // Reload landmarks to get the updated list with user information
             loadLandmarks(selectedLocation.lat, selectedLocation.lng);
-
-            // Show success message
             showAlert('success', 'Landmark added successfully!');
-
-            // Reset form
             e.target.reset();
             selectedLocation = null;
         } catch (error) {
@@ -240,5 +246,4 @@ if (form) {
     });
 }
 
-// Initialize map when page loads
 document.addEventListener('DOMContentLoaded', initMap);
