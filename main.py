@@ -1,4 +1,5 @@
 from flask import render_template, jsonify, request
+from flask_login import current_user, login_required
 from app import app, db
 from models import Landmark
 import requests
@@ -37,12 +38,14 @@ def get_landmarks():
             'latitude': l.latitude,
             'longitude': l.longitude,
             'description': l.description,
-            'source': 'user'
+            'source': 'user',
+            'added_by': l.author.username if l.author else 'Anonymous'
         })
     
     return jsonify(landmarks)
 
 @app.route('/api/landmarks', methods=['POST'])
+@login_required
 def add_landmark():
     data = request.json
     landmark = Landmark(
@@ -50,7 +53,8 @@ def add_landmark():
         latitude=data['latitude'],
         longitude=data['longitude'],
         description=data['description'],
-        source='user'
+        source='user',
+        user_id=current_user.id
     )
     db.session.add(landmark)
     db.session.commit()

@@ -49,7 +49,10 @@ function initMap() {
     // Handle map clicks for adding new landmarks
     map.on('click', function(e) {
         selectedLocation = e.latlng;
-        document.getElementById('submitBtn').disabled = false;
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+        }
     });
 }
 
@@ -75,13 +78,19 @@ function createMarker(landmark) {
         icon: icons[landmark.source]
     });
 
-    marker.bindPopup(`
+    let popupContent = `
         <div class="popup-content">
             <h5>${landmark.name}</h5>
             <p>${landmark.description}</p>
             <small class="text-muted">Source: ${landmark.source}</small>
-        </div>
-    `);
+    `;
+
+    if (landmark.added_by) {
+        popupContent += `<br><small class="text-muted">Added by: ${landmark.added_by}</small>`;
+    }
+
+    popupContent += '</div>';
+    marker.bindPopup(popupContent);
 
     markers.push(marker);
     return marker;
@@ -132,57 +141,59 @@ function showAlert(type, message) {
 }
 
 // Handle form submission
-document.getElementById('landmarkForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    if (!selectedLocation) return;
+const form = document.getElementById('landmarkForm');
+if (form) {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!selectedLocation) return;
 
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
-
-    const data = {
-        name: document.getElementById('name').value,
-        description: document.getElementById('description').value,
-        latitude: selectedLocation.lat,
-        longitude: selectedLocation.lng
-    };
-
-    try {
-        const response = await fetch('/api/landmarks', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to add landmark');
-        }
-
-        // Immediately add the new marker
-        const newLandmark = {
-            ...data,
-            source: 'user'
-        };
-        const marker = createMarker(newLandmark);
-        marker.addTo(map);
-
-        // Show success message
-        showAlert('success', 'Landmark added successfully!');
-
-        // Reset form
-        e.target.reset();
-        selectedLocation = null;
-    } catch (error) {
-        console.error('Error adding landmark:', error);
-        showAlert('danger', 'Failed to add landmark');
-    } finally {
+        const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = 'Add Landmark';
-    }
-});
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+
+        const data = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value,
+            latitude: selectedLocation.lat,
+            longitude: selectedLocation.lng
+        };
+
+        try {
+            const response = await fetch('/api/landmarks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/google_login';
+                    return;
+                }
+                throw new Error('Failed to add landmark');
+            }
+
+            // Reload landmarks to get the updated list with user information
+            loadLandmarks(selectedLocation.lat, selectedLocation.lng);
+
+            // Show success message
+            showAlert('success', 'Landmark added successfully!');
+
+            // Reset form
+            e.target.reset();
+            selectedLocation = null;
+        } catch (error) {
+            console.error('Error adding landmark:', error);
+            showAlert('danger', 'Failed to add landmark');
+        } finally {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Add Landmark';
+        }
+    });
+}
 
 // Initialize map when page loads
 document.addEventListener('DOMContentLoaded', initMap);

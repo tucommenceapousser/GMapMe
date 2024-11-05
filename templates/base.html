@@ -12,6 +12,14 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">Local Landmarks</a>
+            <div class="navbar-nav ms-auto">
+                {% if current_user.is_authenticated %}
+                    <span class="nav-item nav-link">Welcome, {{ current_user.username }}!</span>
+                    <a class="nav-item nav-link" href="{{ url_for('google_auth.logout') }}">Logout</a>
+                {% else %}
+                    <a class="nav-item nav-link" href="{{ url_for('google_auth.login') }}">Login with Google</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 
