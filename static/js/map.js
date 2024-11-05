@@ -9,6 +9,29 @@ function initMap() {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    // Add legend
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'info legend');
+        div.innerHTML = `
+            <div class="card bg-dark">
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-2">Legend</h6>
+                    <div class="d-flex align-items-center mb-1">
+                        <img src="/static/icons/blue-marker.png" alt="User" style="width: 20px; height: 20px;">
+                        <span class="ms-2">User Added</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <img src="/static/icons/red-marker.png" alt="Wikipedia" style="width: 20px; height: 20px;">
+                        <span class="ms-2">Wikipedia</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        return div;
+    };
+    legend.addTo(map);
+
     // Get user's location
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -32,17 +55,32 @@ function initMap() {
 
 // Create marker with popup
 function createMarker(landmark) {
-    const marker = L.marker([landmark.latitude, landmark.longitude], {
-        icon: L.divIcon({
-            className: `marker-${landmark.source}`,
-            html: `<i class="fas fa-map-marker-alt"></i>`
+    // Define custom icons for different sources
+    const icons = {
+        wikipedia: L.icon({
+            iconUrl: '/static/icons/red-marker.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        }),
+        user: L.icon({
+            iconUrl: '/static/icons/blue-marker.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
         })
+    };
+
+    const marker = L.marker([landmark.latitude, landmark.longitude], {
+        icon: icons[landmark.source]
     });
 
     marker.bindPopup(`
-        <h5>${landmark.name}</h5>
-        <p>${landmark.description}</p>
-        <small>Source: ${landmark.source}</small>
+        <div class="popup-content">
+            <h5>${landmark.name}</h5>
+            <p>${landmark.description}</p>
+            <small class="text-muted">Source: ${landmark.source}</small>
+        </div>
     `);
 
     markers.push(marker);
