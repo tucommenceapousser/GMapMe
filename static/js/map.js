@@ -264,19 +264,38 @@ async function loadBookmarks() {
     }
 }
 
-function displayBookmarks(data) {
+
+async function getAddress(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch address');
+        }
+        const data = await response.json();
+        return data.display_name || 'Address not found';
+    } catch (error) {
+        console.error('Error getting address:', error);
+        return 'Address not found';
+    }
+}
+
+async function displayBookmarks(data) {
     const bookmarkList = document.getElementById('bookmarkList');
     bookmarkList.innerHTML = ''; // Clear existing content
 
     for (const [group, landmarks] of Object.entries(data.by_category)) {
         bookmarkList.innerHTML += `<h6>${group.toUpperCase()}</h6>`;
-        landmarks.forEach(landmark => {
+        for (const landmark of landmarks) {
+            const address = await getAddress(landmark.latitude, landmark.longitude); // Fetch address
             bookmarkList.innerHTML += `
-                <div class="bookmark-item" data-lat="${landmark.latitude}" data-lng="${landmark.longitude}">
-                    <strong>${landmark.name}</strong> by ${landmark.added_by || 'Anonymous'}
+                <div class="bookmark-item mb-3" data-lat="${landmark.latitude}" data-lng="${landmark.longitude}">
+                    <strong>${landmark.name}</strong><br>
+                    <small>by ${landmark.added_by || 'Anonymous'}</small><br>
+                    <small>Coordinates: ${landmark.latitude.toFixed(4)}, ${landmark.longitude.toFixed(4)}</small><br>
+                    <small>Address: ${address}</small>
                 </div>
             `;
-        });
+        }
     }
 
     // Add click event to redirect to map location
@@ -289,6 +308,7 @@ function displayBookmarks(data) {
     });
 }
 
+// Call the modified loadBookmarks function
 document.addEventListener('DOMContentLoaded', function() {
     initMap();
     loadBookmarks();
