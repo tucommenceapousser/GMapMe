@@ -1,0 +1,19 @@
+#map {
+    height: 80vh;
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid var(--bs-border-color);
+}
+
+.leaflet-popup-content-wrapper {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+.leaflet-popup-tip {
+    background-color: var(--bs-dark);
+}
+
+.marker-wikipedia {
+    filter: hue-rotate(120deg);
+}
