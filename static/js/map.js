@@ -60,8 +60,7 @@ function initMap() {
             loadLandmarks(lat, lng);
         }, function(error) {
             console.log("Could not get location:", error.message);
-            // Default to a central location if location access denied
-            map.setView([48.8566, 2.3522], 13);
+            map.setView([48.8566, 2.3522], 13);  // Default location
             loadLandmarks(48.8566, 2.3522);
         }, {
             timeout: 5000,
@@ -87,10 +86,10 @@ function initMap() {
 function createMarker(landmark) {
     let marker;
     const isWikipedia = landmark.source === 'wikipedia';
-    
+
     try {
         const markerColor = isWikipedia ? categoryColors.wikipedia : categoryColors[landmark.category || 'historical'];
-        
+
         const markerOptions = {
             radius: 8,
             fillColor: markerColor,
@@ -154,7 +153,6 @@ function createMarker(landmark) {
     return marker;
 }
 
-// Rest of the code remains the same
 function clearMarkers() {
     markers.forEach(marker => map.removeLayer(marker));
     markers = [];
@@ -166,10 +164,10 @@ async function loadLandmarks(lat, lng) {
         if (!response.ok) {
             throw new Error('Failed to fetch landmarks');
         }
-        
+
         const landmarks = await response.json();
         clearMarkers();
-        
+
         landmarks.forEach(landmark => {
             const marker = createMarker(landmark);
             marker.addTo(map);
@@ -178,6 +176,55 @@ async function loadLandmarks(lat, lng) {
         console.error('Error loading landmarks:', error);
         showAlert('error', 'Failed to load landmarks');
     }
+}
+
+async function getAddress(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch address');
+        }
+        const data = await response.json();
+        return data.display_name || 'Address not found';
+    } catch (error) {
+        console.error('Error getting address:', error);
+        return 'Address not found';
+    }
+}
+
+async function displayBookmarks(data) {
+    const bookmarkList = document.getElementById('bookmarkList');
+    bookmarkList.innerHTML = ''; // Clear existing content
+
+    for (const [group, landmarks] of Object.entries(data.by_category)) {
+        bookmarkList.innerHTML += `<h6>${group.toUpperCase()}</h6>`;
+        for (const landmark of landmarks) {
+            const address = await getAddress(landmark.latitude, landmark.longitude); // Fetch address
+            bookmarkList.innerHTML += `
+                <div class="bookmark-item mb-3" data-lat="${landmark.latitude}" data-lng="${landmark.longitude}">
+                    <strong>${landmark.name}</strong><br>
+                    <small>by ${landmark.added_by || 'Anonymous'}</small><br>
+                    <small>Coordinates: ${landmark.latitude.toFixed(4)}, ${landmark.longitude.toFixed(4)}</small><br>
+                    <small>Address: ${address}</small>
+                </div>
+            `;
+        }
+    }
+
+    // Add click event for opening the popup on the focused marker
+    document.querySelectorAll('.bookmark-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const lat = parseFloat(this.getAttribute('data-lat'));
+            const lng = parseFloat(this.getAttribute('data-lng'));
+            map.setView([lat, lng], 15);
+            markers.forEach(marker => {
+                if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
+                    marker.openPopup();  // Open the popup for the focused marker
+                }
+            });
+            scrollToMap();  // Call the scroll function
+        });
+    });
 }
 
 function showAlert(type, message) {
@@ -189,7 +236,7 @@ function showAlert(type, message) {
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     document.querySelector('.col-md-3').insertBefore(alertDiv, document.querySelector('.card'));
-    
+
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
@@ -199,7 +246,7 @@ const form = document.getElementById('landmarkForm');
 if (form) {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         if (!selectedLocation) return;
 
         const submitBtn = document.getElementById('submitBtn');
@@ -254,61 +301,22 @@ async function loadBookmarks() {
         }
 
         const bookmarksData = await response.json();
-
-        // Debug statement to inspect the JSON data received
-        console.log('Bookmarks data:', bookmarksData);
-
         displayBookmarks(bookmarksData);
     } catch (error) {
         console.error('Error loading bookmarks:', error);
     }
 }
 
-
-async function getAddress(lat, lng) {
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch address');
-        }
-        const data = await response.json();
-        return data.display_name || 'Address not found';
-    } catch (error) {
-        console.error('Error getting address:', error);
-        return 'Address not found';
-    }
-}
-
-async function displayBookmarks(data) {
-    const bookmarkList = document.getElementById('bookmarkList');
-    bookmarkList.innerHTML = ''; // Clear existing content
-
-    for (const [group, landmarks] of Object.entries(data.by_category)) {
-        bookmarkList.innerHTML += `<h6>${group.toUpperCase()}</h6>`;
-        for (const landmark of landmarks) {
-            const address = await getAddress(landmark.latitude, landmark.longitude); // Fetch address
-            bookmarkList.innerHTML += `
-                <div class="bookmark-item mb-3" data-lat="${landmark.latitude}" data-lng="${landmark.longitude}">
-                    <strong>${landmark.name}</strong><br>
-                    <small>by ${landmark.added_by || 'Anonymous'}</small><br>
-                    <small>Coordinates: ${landmark.latitude.toFixed(4)}, ${landmark.longitude.toFixed(4)}</small><br>
-                    <small>Address: ${address}</small>
-                </div>
-            `;
-        }
-    }
-
-    // Add click event to redirect to map location
-    document.querySelectorAll('.bookmark-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const lat = parseFloat(this.getAttribute('data-lat'));
-            const lng = parseFloat(this.getAttribute('data-lng'));
-            map.setView([lat, lng], 15);
+function scrollToMap() {
+    const mapElement = document.getElementById('map');
+    if (mapElement) {
+        mapElement.scrollIntoView({
+            behavior: 'smooth'
         });
-    });
+    }
 }
 
-// Call the modified loadBookmarks function
+// Initialization
 document.addEventListener('DOMContentLoaded', function() {
     initMap();
     loadBookmarks();
