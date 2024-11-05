@@ -38,6 +38,7 @@ def get_landmarks():
             'latitude': l.latitude,
             'longitude': l.longitude,
             'description': l.description,
+            'category': l.category,
             'source': 'user',
             'added_by': l.author.username if l.author else 'Anonymous'
         })
@@ -53,6 +54,7 @@ def add_landmark():
         latitude=data['latitude'],
         longitude=data['longitude'],
         description=data['description'],
+        category=data['category'],
         source='user',
         user_id=current_user.id
     )
