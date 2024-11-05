@@ -14,38 +14,35 @@ GOOGLE_CLIENT_ID = os.environ["GOOGLE_OAUTH_CLIENT_ID"]
 GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_OAUTH_CLIENT_SECRET"]
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
-# Make sure to use this redirect URL. It has to match the one in the whitelist
-DEV_REDIRECT_URL = f'https://{os.environ["REPLIT_DEV_DOMAIN"]}/google_login/callback'
-
-# ALWAYS display setup instructions to the user:
-print(f"""To make Google authentication work:
-1. Go to https://console.cloud.google.com/apis/credentials
-2. Create a new OAuth 2.0 Client ID
-3. Add {DEV_REDIRECT_URL} to Authorized redirect URIs
-
-For detailed instructions, see:
-https://docs.replit.com/additional-resources/google-auth-in-flask#set-up-your-oauth-app--client
-""")
-
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 google_auth = Blueprint("google_auth", __name__)
-
 
 @google_auth.route("/google_login")
 def login():
     google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
 
+    callback_url = request.url_root.rstrip('/') + url_for('google_auth.callback')
+    callback_url = callback_url.replace('http://', 'https://')
+
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        # Replacing http:// with https:// is important as the external
-        # protocol must be https to match the URI whitelisted
-        redirect_uri=request.base_url.replace("http://", "https://") + "/callback",
+        redirect_uri=callback_url,
         scope=["openid", "email", "profile"],
     )
-    return redirect(request_uri)
 
+    # Print the callback URL for user setup
+    print(f"""To make Google authentication work:
+1. Go to https://console.cloud.google.com/apis/credentials
+2. Create a new OAuth 2.0 Client ID
+3. Add {callback_url} to Authorized redirect URIs
+
+For detailed instructions, see:
+https://docs.replit.com/additional-resources/google-auth-in-flask#set-up-your-oauth-app--client
+""")
+
+    return redirect(request_uri)
 
 @google_auth.route("/google_login/callback")
 def callback():
@@ -53,12 +50,13 @@ def callback():
     google_provider_cfg = requests.get(GOOGLE_DISCOVERY_URL).json()
     token_endpoint = google_provider_cfg["token_endpoint"]
 
+    callback_url = request.url_root.rstrip('/') + url_for('google_auth.callback')
+    callback_url = callback_url.replace('http://', 'https://')
+
     token_url, headers, body = client.prepare_token_request(
         token_endpoint,
-        # Replacing http:// with https:// is important as the external
-        # protocol must be https to match the URI whitelisted
         authorization_response=request.url.replace("http://", "https://"),
-        redirect_url=request.base_url.replace("http://", "https://"),
+        redirect_url=callback_url,
         code=code,
     )
     token_response = requests.post(
@@ -90,7 +88,6 @@ def callback():
     login_user(user)
 
     return redirect(url_for("index"))
-
 
 @google_auth.route("/logout")
 @login_required
