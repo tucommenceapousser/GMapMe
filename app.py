@@ -33,6 +33,7 @@ def load_user(user_id):
 from google_auth import google_auth
 app.register_blueprint(google_auth)
 
+# Initialize database
 with app.app_context():
     import models
     db.create_all()
